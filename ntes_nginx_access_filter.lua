@@ -28,6 +28,7 @@
 require "math"
 require "string"
 
+local first = true
 
 local total = 0
 local n50x = 0
@@ -56,19 +57,23 @@ function process_message ()
 end
 
 function timer_event(ns)
-    local avg_uptime = math.ceil(sum_uptime / up)
+    if first then
+        first = false
+    else
+        local avg_uptime = math.ceil(sum_uptime / up)
 
-    local msg = {
-        Type = "nginx.access.stat",
-        Payload = "",
-        Fields = {
-            {name="nginx_all",         value=total,      value_type=2, representation="ts"},
-            {name="nginx_50x",         value=n50x,       value_type=2, representation="ts"},
-            {name="nginx_avg_uptime",  value=avg_uptime, value_type=2, representation="ms"}
+        local msg = {
+            Type = "nginx.access.stat",
+            Payload = "",
+            Fields = {
+                {name="nginx_all",         value=total,      value_type=2, representation="ts"},
+                {name="nginx_50x",         value=n50x,       value_type=2, representation="ts"},
+                {name="nginx_avg_uptime",  value=avg_uptime, value_type=2, representation="ms"}
+            }
         }
-    }
 
-    inject_message(msg)
+        inject_message(msg)
+    end
 
     total = 0
     n50x = 0

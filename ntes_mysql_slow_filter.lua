@@ -18,6 +18,8 @@
 --require "math"
 --require "string"
 
+local first = true
+
 local INT    = 2
 local DOUBLE = 3
 
@@ -35,18 +37,22 @@ function process_message ()
 end
 
 function timer_event(ns)
-    local avg_query_time = sum_query_time / count
+    if first then
+        first = false
+    else
+        local avg_query_time = sum_query_time / count
 
-    local msg = {
-        Type = "mysql.slow-query.stat",
-        Payload = "",
-        Fields = {
-            {name="mysql_slow_count",      value=count,          value_type=INT,    representation="ts"},
-            {name="mysql_slow_avg_query",  value=avg_query_time, value_type=DOUBLE, representation="ms"}
+        local msg = {
+            Type = "mysql.slow-query.stat",
+            Payload = "",
+            Fields = {
+                {name="mysql_slow_count",      value=count,          value_type=INT,    representation="ts"},
+                {name="mysql_slow_avg_query",  value=avg_query_time, value_type=DOUBLE, representation="ms"}
+            }
         }
-    }
 
-    inject_message(msg)
+        inject_message(msg)
+    end
 
     count = 0
     sum_query_time = 0.0
