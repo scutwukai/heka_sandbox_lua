@@ -25,10 +25,12 @@
     | name:"request_time" type:double value:0.005 representation:"s"
 ]]--
 
+require "os"
 require "math"
 require "string"
 
-local first = true
+local startup = os.time()
+local ready = false
 
 local total = 0
 local n50x = 0
@@ -38,6 +40,12 @@ local sum_uptime = 0            -- ms
 
 
 function process_message ()
+    if not ready and read_message("Timestamp") < startup then
+        return 0
+    else
+        ready = true
+    end
+
     local status = read_message("Fields[status]")
     local uptime = read_message("Fields[upstream_response_time]")
 
@@ -57,24 +65,30 @@ function process_message ()
 end
 
 function timer_event(ns)
-    if first then
-        first = false
-    else
-        local avg_uptime = math.ceil(sum_uptime / up)
-
-        local msg = {
-            Type = "nginx.access.stat",
-            Payload = "",
-            Fields = {
-                {name="nginx_all",         value=total,      value_type=2, representation="ts"},
-                {name="nginx_50x",         value=n50x,       value_type=2, representation="ts"},
-                {name="nginx_avg_uptime",  value=avg_uptime, value_type=2, representation="ms"}
-            }
-        }
-
-        inject_message(msg)
+    if not ready then
+        return
     end
+
+    local avg_uptime = 0
+    if up > 0 then
+        avg_uptime = math.ceil(sum_uptime / up)
+    end
+
+    local msg = {
+        Type = "nginx.access.stat",
+        Payload = "",
+        Fields = {
+            {name="nginx_all",         value=total,      value_type=2, representation="ts"},
+            {name="nginx_50x",         value=n50x,       value_type=2, representation="ts"},
+            {name="nginx_avg_uptime",  value=avg_uptime, value_type=2, representation="ms"}
+        }
+    }
+
+    inject_message(msg)
 
     total = 0
     n50x = 0
+
+    up = 0
+    sum_uptime = 0
 end

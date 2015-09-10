@@ -18,16 +18,25 @@
 --require "math"
 --require "string"
 
-local first = true
+require "os"
 
 local INT    = 2
 local DOUBLE = 3
+
+local startup = os.time()
+local ready = false
 
 local count = 0
 local sum_query_time = 0.0     -- micro second
 
 
 function process_message ()
+    if not ready and read_message("Timestamp") < startup then
+        return 0
+    else
+        ready = true
+    end
+
     local query = read_message("Fields[Query_time]")
 
     count = count + 1
@@ -37,22 +46,25 @@ function process_message ()
 end
 
 function timer_event(ns)
-    if first then
-        first = false
-    else
-        local avg_query_time = sum_query_time / count
-
-        local msg = {
-            Type = "mysql.slow-query.stat",
-            Payload = "",
-            Fields = {
-                {name="mysql_slow_count",      value=count,          value_type=INT,    representation="ts"},
-                {name="mysql_slow_avg_query",  value=avg_query_time, value_type=DOUBLE, representation="ms"}
-            }
-        }
-
-        inject_message(msg)
+    if not ready then
+        return
     end
+
+    local avg_query_time = 0
+    if count > 0 then
+        avg_query_time = sum_query_time / count
+    end
+
+    local msg = {
+        Type = "mysql.slow-query.stat",
+        Payload = "",
+        Fields = {
+            {name="mysql_slow_count",      value=count,          value_type=INT,    representation="ts"},
+            {name="mysql_slow_avg_query",  value=avg_query_time, value_type=DOUBLE, representation="ms"}
+        }
+    }
+
+    inject_message(msg)
 
     count = 0
     sum_query_time = 0.0
