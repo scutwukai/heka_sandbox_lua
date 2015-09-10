@@ -29,7 +29,7 @@ require "os"
 require "math"
 require "string"
 
-local startup = os.time()
+local startup = os.time() * 1e9
 local ready = false
 
 local total = 0

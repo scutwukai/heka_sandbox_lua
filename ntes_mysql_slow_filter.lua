@@ -23,7 +23,7 @@ require "os"
 local INT    = 2
 local DOUBLE = 3
 
-local startup = os.time()
+local startup = os.time() * 1e9
 local ready = false
 
 local count = 0
