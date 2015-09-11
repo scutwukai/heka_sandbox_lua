@@ -21,7 +21,7 @@ local ip            = l.digit^1 * "." * l.digit^1 * "." * l.digit^1 * "." * l.di
 local time          = l.P"# Time: " * line
 
 local user_name     = (l.P(1) - "[")^1 * "[" * (l.P(1) - "]")^1 * "]"
-local host_name     = l.Cg((l.P(1) - space)^1, "Hostname") * space * "[" * l.Cg(ip, "IP") * "]"
+local host_name     = l.Cg((l.P(1) - space)^1, "Hostname") * space * "[" * l.Cg(ip, "IP")^0 * "]"
 local id            = l.P"Id: " * int
 local user          = l.P"# User@Host: " * user_name * space * "@" * space * host_name * space * id * sep
 
