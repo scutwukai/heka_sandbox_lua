@@ -80,6 +80,7 @@ function timer_event(ns)
         Fields = {
             {name="nginx_all",         value=total,      value_type=2, representation="ts"},
             {name="nginx_50x",         value=n50x,       value_type=2, representation="ts"},
+            {name="nginx_up",          value=up,         value_type=2, representation="ts"},
             {name="nginx_avg_uptime",  value=avg_uptime, value_type=2, representation="ms"}
         }
     }
